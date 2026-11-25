@@ -385,6 +385,51 @@ h3 { font-size: 1.25rem; letter-spacing: -0.02em; color: var(--text); }
   gap: 1.5rem;
 }
 
+.mode-toggle {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+  background: rgba(5, 3, 8, 0.6);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.25rem;
+}
+.mode-btn {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 650;
+  padding: 0.45rem 0.7rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.mode-btn.is-on {
+  background: linear-gradient(135deg, rgba(196, 75, 255, 0.28), rgba(0, 224, 254, 0.22));
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(0, 224, 254, 0.35);
+}
+.mode-hint {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+.imagine-only textarea {
+  width: 100%;
+  min-height: 6rem;
+  resize: vertical;
+  background: #0a0710;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: inherit;
+  font: inherit;
+  padding: 0.7rem 0.8rem;
+  margin-bottom: 0.7rem;
+}
+.imagine-only .btn { width: 100%; margin-bottom: 0.55rem; }
+.imagine-only .btn[disabled] { opacity: 0.65; cursor: wait; }
+
 .nova-controls {
   background: var(--bg-elev);
   border: 1px solid var(--line);
@@ -714,3 +759,42 @@ details p {
   .offer-grid { grid-template-columns: 1fr 1fr; }
   .offer-grid li:last-child { grid-column: 1 / -1; }
 }
+
+.upload-step {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 1rem 0.95rem 0.85rem;
+  margin: 0 0 1.2rem;
+  background: rgba(8, 6, 14, 0.65);
+}
+.upload-step legend {
+  font-family: Syne, sans-serif;
+  font-weight: 800;
+  font-size: 1.05rem;
+  padding: 0 0.35rem;
+}
+.upload-step .form-lead { margin-bottom: 0.95rem; }
+.upload-block {
+  margin-bottom: 0.95rem;
+}
+.upload-block label {
+  display: block;
+  font-weight: 650;
+  margin-bottom: 0.35rem;
+}
+.upload-block input[type="file"] {
+  display: block;
+  width: 100%;
+  font: inherit;
+  color: var(--muted);
+}
+.upload-meter {
+  margin: 0.2rem 0 0;
+  font-weight: 650;
+  font-size: 0.92rem;
+  color: var(--chrome, #d8dbe8);
+}
+.upload-meter.is-ok { color: var(--accent); }
+.upload-meter.is-warn { color: #e8c36a; }
+.upload-meter.is-err { color: #ff8b8b; }
+

@@ -15,12 +15,13 @@ A custom domain is planned (`typec-music.com`, or another Type C Custom name if 
 - Shop shows only Hoodlum Asylum releases (Artist Collection, Street Credibility, CODEAQUE × NOVA — NO COMPETITION)
 - Prices are shown as **from £__** — placeholders, not real prices
 - Ordering is **Coming soon / Pre-register** only
-- **Design with Nova** is a browser-only layout helper: upload a photo, add a name, pick palette colours and a neon frame, preview it on a stick and a card, download a PNG, and send it with an enquiry
+- The pre-register form has an **Upload your content** step (music, music videos, artwork, other files). FormSubmit will only email attachments totalling **10 MB**. Larger files should be sent as a Google Drive, WeTransfer or Dropbox share link. Files are not stored on the site; they arrive as email attachments at the public inbox.
+- **Design with Nova** is a browser helper with two modes. Layout places a photo and text you supply onto stick and card mockups. Imagine generates artwork from a written description using Pollinations.ai’s free, keyless image URL (`image.pollinations.ai`) — no API keys. An uploaded photo does not change the generated picture (no image-to-image); it can appear as a small inset. Generated pictures are marked “AI-generated”.
 
 ## Design with Nova — limits
 
-- No AI image generation and no paid APIs or keys
-- Nova only places the photo and text you provide onto stick and card mockups
+- Layout mode has no AI: Nova only places the photo and text you provide
+- Imagine mode uses Pollinations.ai’s public image endpoint, with no API keys for you to handle. It is text-to-image only. Quality can vary and the service can be slow or fail when busy. There is no paid API on this site
 - She appears only in this design helper, not as a shop artist or a general chat on the site
 - The downloaded PNG is a layout preview, not a photograph of a finished printed product
 - If the web form cannot attach the file, download the PNG and attach it in your email app

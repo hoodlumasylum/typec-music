@@ -2,8 +2,11 @@
   "use strict";
 
   var photoImg = null;
+  var generatedImg = null;
   var colour = "cyan";
   var frame = "dual";
+  var mode = "layout";
+  var imagining = false;
 
   var COLOURS = {
     cyan: { a: "#00e0fe", b: "#00e0fe", label: "Cyan" },
@@ -21,6 +24,11 @@
   var lineInput = document.getElementById("nova-line");
   var photoInput = document.getElementById("nova-photo");
   var statusEl = document.getElementById("nova-status");
+  var promptInput = document.getElementById("nova-prompt");
+  var imagineBtn = document.getElementById("nova-imagine");
+  var modeHint = document.getElementById("nova-mode-hint");
+  var imagineField = document.getElementById("nova-imagine-field");
+  var photoOptional = document.getElementById("nova-photo-optional");
 
   function val(el) { return el && el.value ? el.value.trim() : ""; }
 
@@ -76,11 +84,69 @@
     ctx.font = "600 22px Outfit, system-ui, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("Upload a photo", x + w / 2, y + h / 2 - 10);
+    var title = mode === "imagine" ? "Describe a picture" : "Upload a photo";
+    var sub = mode === "imagine" ? "Then tap Imagine artwork" : "Nova will place it here";
+    ctx.fillText(title, x + w / 2, y + h / 2 - 10);
     ctx.font = "400 14px Outfit, system-ui, sans-serif";
     ctx.fillStyle = pal.a;
-    ctx.fillText("Nova will place it here", x + w / 2, y + h / 2 + 16);
+    ctx.fillText(sub, x + w / 2, y + h / 2 + 16);
     ctx.restore();
+  }
+
+  function mainArt() {
+    if (mode === "imagine" && generatedImg) return generatedImg;
+    return photoImg;
+  }
+
+  function drawInset(ctx, img, fx, fy, fw, fh, fr) {
+    var iw = Math.max(56, Math.round(fw * 0.28));
+    var ih = iw;
+    var pad = 10;
+    var ix = fx + fw - iw - pad;
+    var iy = fy + pad;
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.65)";
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = "rgba(5,3,8,0.9)";
+    roundedRect(ctx, ix - 3, iy - 3, iw + 6, ih + 6, 10);
+    ctx.fill();
+    ctx.restore();
+    coverImage(ctx, img, ix, iy, iw, ih, 8);
+  }
+
+  function drawAiBadge(ctx, x, y) {
+    var label = "AI-generated";
+    ctx.save();
+    ctx.font = "700 11px Outfit, sans-serif";
+    var tw = ctx.measureText(label).width;
+    var bx = x + 10;
+    var by = y + 10;
+    var bw = tw + 16;
+    var bh = 20;
+    ctx.fillStyle = "rgba(5,3,8,0.78)";
+    roundedRect(ctx, bx, by, bw, bh, 10);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,224,254,0.7)";
+    ctx.lineWidth = 1;
+    roundedRect(ctx, bx, by, bw, bh, 10);
+    ctx.stroke();
+    ctx.fillStyle = "#00e0fe";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(label, bx + 8, by + bh / 2 + 0.5);
+    ctx.restore();
+  }
+
+  function paintFace(ctx, fx, fy, fw, fh, fr, pal) {
+    var art = mainArt();
+    if (art) coverImage(ctx, art, fx, fy, fw, fh, fr);
+    else placeholderFace(ctx, fx, fy, fw, fh, fr, pal);
+    if (mode === "imagine" && generatedImg && photoImg) {
+      drawInset(ctx, photoImg, fx, fy, fw, fh, fr);
+    }
+    if (mode === "imagine" && generatedImg) {
+      drawAiBadge(ctx, fx, fy);
+    }
   }
 
   function drawTextBlock(ctx, x, y, w, pal) {
@@ -250,8 +316,7 @@
     var fh = bodyH - 90;
     var fr = 22;
 
-    if (photoImg) coverImage(ctx, photoImg, fx, fy, fw, fh, fr);
-    else placeholderFace(ctx, fx, fy, fw, fh, fr, pal);
+    paintFace(ctx, fx, fy, fw, fh, fr, pal);
 
     // bottom fade for text
     var fade = ctx.createLinearGradient(fx, fy + fh - 120, fx, fy + fh);
@@ -317,8 +382,7 @@
     var fh = bodyH - inset * 2;
     var fr = 18;
 
-    if (photoImg) coverImage(ctx, photoImg, fx, fy, fw, fh, fr);
-    else placeholderFace(ctx, fx, fy, fw, fh, fr, pal);
+    paintFace(ctx, fx, fy, fw, fh, fr, pal);
 
     var fade = ctx.createLinearGradient(fx, fy + fh - 110, fx, fy + fh);
     fade.addColorStop(0, "rgba(0,0,0,0)");
@@ -355,13 +419,28 @@
       chrome: "Chrome",
       wave: "Sound wave"
     };
-    var parts = [
-      "Nova layout (no AI — photo and text I supplied):",
-      "Artist/name: " + (val(nameInput) || "(none)"),
-      "Extra line: " + (val(lineInput) || "(none)"),
-      "Colour: " + pal.label,
-      "Frame: " + (frameNames[frame] || frame)
-    ];
+    var parts;
+    if (mode === "imagine" && generatedImg) {
+      parts = [
+        "Nova Imagine (AI-generated from my description, via Pollinations.ai — no API key):",
+        "Description: " + (val(promptInput) || "(none)"),
+        "Artist/name: " + (val(nameInput) || "(none)"),
+        "Extra line: " + (val(lineInput) || "(none)"),
+        "Colour: " + pal.label,
+        "Frame: " + (frameNames[frame] || frame),
+        photoImg
+          ? "Uploaded photo was used as a small inset only and did not change what the AI drew."
+          : "No reference photo was uploaded."
+      ];
+    } else {
+      parts = [
+        "Nova layout (no AI — photo and text I supplied):",
+        "Artist/name: " + (val(nameInput) || "(none)"),
+        "Extra line: " + (val(lineInput) || "(none)"),
+        "Colour: " + pal.label,
+        "Frame: " + (frameNames[frame] || frame)
+      ];
+    }
     return parts.join("\n");
   }
 
@@ -377,7 +456,10 @@
     ctx.fillText("TYPE C CUSTOM", 40, 48);
     ctx.font = "500 16px Outfit, sans-serif";
     ctx.fillStyle = "#00e0fe";
-    ctx.fillText("Stick and card layout — designed with Nova (layout only, no AI generation)", 40, 74);
+    var sub = (mode === "imagine" && generatedImg)
+      ? "Stick and card — designed with Nova (Imagine: AI-generated from description)"
+      : "Stick and card layout — designed with Nova (layout only, no AI generation)";
+    ctx.fillText(sub, 40, 74);
 
     // draw previews scaled
     var sh = 820;
@@ -401,6 +483,8 @@
       window.TYPEC_DESIGN = window.TYPEC_DESIGN || {};
       window.TYPEC_DESIGN.blob = blob;
       window.TYPEC_DESIGN.note = currentNote();
+      if (typeof window.TYPEC_REFRESH_UPLOAD === "function") window.TYPEC_REFRESH_UPLOAD();
+
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
       a.href = url;
@@ -418,14 +502,16 @@
       window.TYPEC_DESIGN = window.TYPEC_DESIGN || {};
       window.TYPEC_DESIGN.blob = blob;
       window.TYPEC_DESIGN.note = currentNote();
+      if (typeof window.TYPEC_REFRESH_UPLOAD === "function") window.TYPEC_REFRESH_UPLOAD();
+
       var note = currentNote();
       ["pr-message", "ct-message"].forEach(function (id) {
         var ta = document.getElementById(id);
         if (!ta) return;
         var existing = ta.value.trim();
-        if (existing && existing.indexOf("Nova layout") !== -1) {
+        if (existing && (existing.indexOf("Nova layout") !== -1 || existing.indexOf("Nova Imagine") !== -1)) {
           // replace previous auto note if present at the end
-          ta.value = existing.replace(/\n*Nova layout[\s\S]*$/, "").trim();
+          ta.value = existing.replace(/\n*Nova (layout|Imagine)[\s\S]*$/, "").trim();
           existing = ta.value.trim();
         }
         ta.value = (existing ? existing + "\n\n" : "") + note;
@@ -459,7 +545,9 @@
       img.onload = function () {
         photoImg = img;
         redraw();
-        setStatus("Photo added — you can change the name, colour and frame and the previews will update.");
+        setStatus(mode === "imagine"
+          ? "Photo added as an inset only — it will not change what Imagine draws."
+          : "Photo added — you can change the name, colour and frame and the previews will update.");
       };
       img.onerror = function () {
         setStatus("That file couldn’t be read as an image.");
@@ -492,10 +580,96 @@
     });
   });
 
+
+  function setMode(next) {
+    mode = next === "imagine" ? "imagine" : "layout";
+    document.querySelectorAll(".mode-btn").forEach(function (btn) {
+      var on = btn.getAttribute("data-mode") === mode;
+      btn.classList.toggle("is-on", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    if (imagineField) imagineField.hidden = mode !== "imagine";
+    if (photoOptional) photoOptional.hidden = mode !== "imagine";
+    if (modeHint) {
+      modeHint.textContent = mode === "imagine"
+        ? "Imagine: I’ll generate a picture from your description (free, no API keys, Pollinations.ai). An uploaded photo is only a small inset — it does not change the AI picture."
+        : "Layout: I’ll place the photo and text you give me. No AI is used in this mode.";
+    }
+    redraw();
+  }
+
+  document.querySelectorAll(".mode-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      setMode(btn.getAttribute("data-mode") || "layout");
+    });
+  });
+
+  function imagineArtwork() {
+    var desc = val(promptInput);
+    if (!desc) {
+      setStatus("Describe the artwork you want first.");
+      if (promptInput) promptInput.focus();
+      return;
+    }
+    if (imagining) return;
+    imagining = true;
+    if (imagineBtn) {
+      imagineBtn.disabled = true;
+      imagineBtn.textContent = "Imagining…";
+    }
+    setStatus("Imagining artwork… this can take 15–60 seconds. The picture is generated from your description only.");
+    var seed = Math.floor(Math.random() * 1e9);
+    var prompt = desc + ". High quality artwork suitable for printing on a USB card.";
+    var url = "https://image.pollinations.ai/prompt/" + encodeURIComponent(prompt) +
+      "?width=1024&height=1024&nologo=true&seed=" + seed;
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, 90000);
+    fetch(url, { signal: ctrl.signal })
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.blob();
+      })
+      .then(function (blob) {
+        if (!blob || (blob.type && blob.type.indexOf("image/") !== 0)) {
+          throw new Error("not image");
+        }
+        return new Promise(function (resolve, reject) {
+          var obj = URL.createObjectURL(blob);
+          var img = new Image();
+          img.onload = function () {
+            generatedImg = img;
+            resolve();
+          };
+          img.onerror = function () { reject(new Error("decode")); };
+          img.src = obj;
+        });
+      })
+      .then(function () {
+        redraw();
+        setStatus("Artwork generated from your description (AI-generated, Pollinations.ai). Your uploaded photo — if any — is only a small inset and did not change what the AI drew. You can download the PNG or tap Imagine again for a new picture.");
+      })
+      .catch(function (err) {
+        var aborted = err && (err.name === "AbortError" || /abort/i.test(String(err)));
+        setStatus(aborted
+          ? "Imagine timed out. The free service can be busy — wait a moment and try again."
+          : "Imagine couldn’t finish this time. The free service can be busy or block a prompt — wait a moment and try again.");
+      })
+      .finally(function () {
+        clearTimeout(timer);
+        imagining = false;
+        if (imagineBtn) {
+          imagineBtn.disabled = false;
+          imagineBtn.textContent = "Imagine artwork";
+        }
+      });
+  }
+
+  if (imagineBtn) imagineBtn.addEventListener("click", imagineArtwork);
+
   var dl = document.getElementById("nova-download");
   if (dl) dl.addEventListener("click", downloadPng);
   var send = document.getElementById("nova-send");
   if (send) send.addEventListener("click", sendWithEnquiry);
 
-  redraw();
+  setMode("layout");
 })();
