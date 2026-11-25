@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" role="img" aria-labelledby="logoTitle">
+  <title id="logoTitle">Type C Music</title>
+  <rect x="4" y="14" width="32.5" height="20" rx="3.2" stroke="#00e8c4" stroke-width="2.2"/>
+  <path d="M36.5 21.2h2.2v5.6h-2.2" stroke="#00e8c4" stroke-width="2.2" stroke-linejoin="round"/>
+  <rect x="38.2" y="19.6" width="6.2" height="8.8" rx="2.4" stroke="#00e8c4" stroke-width="2"/>
+  <text x="20.25" y="28.6" text-anchor="middle" fill="#00e8c4" font-family="Syne, Outfit, system-ui, sans-serif" font-weight="800" font-size="13.5">C</text>
+</svg>
