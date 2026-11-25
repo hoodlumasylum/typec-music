@@ -55,9 +55,9 @@
   }
 
   function subjectFor(type, data) {
-    if (type === "pre-register") return "Type C Music pre-register" + (data.stick ? ": " + data.stick : "");
-    if (type === "artist-interest") return "Type C Music artist interest" + (data.artist ? ": " + data.artist : "");
-    return "Type C Music contact";
+    if (type === "pre-register") return "Type C Custom pre-register" + (data.stick ? ": " + data.stick : "");
+    if (type === "artist-interest") return "Type C Custom artist interest" + (data.artist ? ": " + data.artist : "");
+    return "Type C Custom contact";
   }
 
   function bodyFor(type, data) {
@@ -118,13 +118,23 @@
     var btn = form.querySelector('button[type="submit"]');
     if (btn) btn.disabled = true;
 
+    var design = window.TYPEC_DESIGN || {};
+    var headers = { Accept: "application/json" };
+    var body;
+    if (design.blob && (type === "pre-register" || type === "contact")) {
+      var fd = new FormData();
+      Object.keys(payload).forEach(function (key) { fd.append(key, payload[key]); });
+      fd.append("attachment", design.blob, "type-c-custom-design.png");
+      body = fd;
+    } else {
+      headers["Content-Type"] = "application/json";
+      body = JSON.stringify(payload);
+    }
+
     fetch("https://formsubmit.co/ajax/" + encodeURIComponent(contactEmail), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      },
-      body: JSON.stringify(payload)
+      headers: headers,
+      body: body
     })
       .then(function (res) {
         return res.json().then(function (json) {
@@ -137,6 +147,8 @@
         if (result.ok && result.json && String(result.json.success) !== "false") {
           statusEl(form, "Thanks — your message is on its way. If this is the first one, we may need to confirm the inbox before it lands.", "ok");
           form.reset();
+          var note = form.querySelector("[id$='-design-note']");
+          if (note) note.hidden = true;
           return;
         }
         throw new Error((result.json && (result.json.message || result.json.error)) || "Send failed");
@@ -146,7 +158,7 @@
         statusEl(
           form,
           used
-            ? "The web form didn’t go through, so your email app should open with the same message ready to send."
+            ? "The web form didn’t go through, so your email app should open with the same message ready to send. If you designed with Nova, attach the downloaded PNG there."
             : "Something went wrong sending the form. Please email us directly.",
           used ? "ok" : "err"
         );
